@@ -7,13 +7,13 @@ A browser workbench for eight deterministic Snake algorithms, developed step by 
 
 ## Watch the algorithms
 
-[![Eight algorithms on 12×12 at a steady 10 moves per second](docs/media/algorithms-preview.gif)](docs/media/algorithms-12x12.mp4)
+[![Eight algorithms on 12×12 at a steady 10 moves per second](docs/media/algorithms-preview.gif)](https://adiltemp908-cyber.github.io/Adil_OptimalSnakeAI/)
 
-**[Watch / download the full 8-minute 10-second video](docs/media/algorithms-12x12.mp4)** · 12×12 · seed **60021** · **10 moves/sec** · 25% greedy switch.
+**[Watch the full 8-minute 10-second video](https://adiltemp908-cyber.github.io/Adil_OptimalSnakeAI/)** · 12×12 · seed **60021** · **10 moves/sec** · 25% greedy switch.
 
 Seed 60021 was selected because all eight algorithms finish in the same order as their average-move ranking in the 100-seed comparison below. **Greedy → certified finishes first in 1,759 moves**, followed by Certified routes in 1,863. This representative single run illustrates the ranking; the batch results establish the averages.
 
-Every running algorithm advances exactly once per 0.1 seconds, with no speed ramps, skipped moves, or planning stalls. The run is computed and checked first, then replayed through the real app renderer at fixed frame times, so expensive decisions cannot slow the recording. Finished boards stay still while the others continue at 10 moves/sec. The 20-second GIF excerpt uses the same speed as the full video. If GitHub does not play the MP4 inline, use its download/raw button to open it in your browser.
+Every running algorithm advances exactly once per 0.1 seconds, with no speed ramps, skipped moves, or planning stalls. The run is computed and checked first, then replayed through the real app renderer at fixed frame times, so expensive decisions cannot slow the recording. Finished boards stay still while the others continue at 10 moves/sec. The 20-second GIF excerpt uses the same speed as the full video. The video link opens a dedicated player with playback and fullscreen controls, plus an MP4 download option.
 
 ## Goals
 

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Watch eight Snake AI algorithms complete a 12×12 board at a steady 10 moves per second.">
+  <title>Snake AI — Algorithm comparison</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f5ef;color:#232921;font:16px/1.6 system-ui,sans-serif}
+    main{max-width:1360px;margin:auto;padding:28px clamp(16px,4vw,48px) 40px}
+    nav{display:flex;justify-content:space-between;gap:16px;font-size:14px}a{color:#405c2c;text-underline-offset:4px}
+    h1{font-size:clamp(26px,4vw,42px);line-height:1.15;letter-spacing:-1.2px;margin:30px 0 12px}
+    .details{color:#62695b;margin:0 0 22px}video{display:block;width:100%;height:auto;background:#20271f;border:1px solid #d6dacd;border-radius:12px}
+    .links{display:flex;flex-wrap:wrap;gap:12px 24px;margin:20px 0}.note{max-width:850px;color:#62695b;font-size:14px}
+    a:focus-visible{outline:3px solid #789d55;outline-offset:4px}
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Navigation"><strong>SNAKE AI / DEMO</strong><a href="https://github.com/adiltemp908-cyber/Adil_OptimalSnakeAI">View repository ↗</a></nav>
+    <h1>Eight algorithms. Every move.</h1>
+    <p class="details">12×12 board · Seed 60021 · 10 moves/sec · 25% greedy switch · 8 min 10 sec</p>
+    <video controls playsinline preload="metadata" width="1600" height="1080" aria-label="Eight Snake AI algorithms completing the board at 10 moves per second">
+      <source src="media/algorithms-12x12.mp4" type="video/mp4">
+      Your browser cannot play this video. <a href="media/algorithms-12x12.mp4">Download the MP4</a> to watch it locally.
+    </video>
+    <div class="links"><a href="media/algorithms-12x12.mp4" download>Download video (MP4)</a><a href="https://github.com/adiltemp908-cyber/Adil_OptimalSnakeAI#12%C3%9712-evaluation-all-eight-algorithms">Read the benchmark comparison ↗</a></div>
+    <p class="note">Greedy → certified finishes first in 1,759 moves. This seed matches the average ranking across all eight algorithms in the 100-seed comparison. Each running algorithm advances once every 0.1 seconds at normal playback speed; completed boards stay still while the others finish.</p>
+  </main>
+</body>
+</html>
