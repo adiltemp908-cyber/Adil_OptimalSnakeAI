@@ -1,10 +1,9 @@
 # Adil_OptimalSnakeAI
 
-**Fill every cell. Use fewer moves. Understand why a shortcut helps—or hurts.**
+**The approach is simple. First priority is the algorithms should complete the board 100% of the time. Then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. So the aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time.**
 
 A browser workbench for eight deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, and adaptive partial loops. Everything runs locally. There is no trained model, dependency installation, or build step.
 
-“Optimal” is the research goal, not a claim that these bounded graph-search heuristics find the global optimum.
 
 ## Watch the algorithms
 
