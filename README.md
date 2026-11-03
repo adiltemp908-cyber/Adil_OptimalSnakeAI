@@ -2,6 +2,8 @@
 
 **The aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time. The approach followed for this is simple. First priority is the algorithms should complete the board 100% of the time. So first we used Hamiltonian cycle then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. I continued this and greedy+certified hybrid(6th algorithm) was the best performing and then the later two algorithms performed worse.**
 
+[Jump to the 12×12 evaluation results](#evaluation-results)
+
 A browser workbench for eight deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, and adaptive partial loops. Everything runs locally. There is no trained model, dependency installation, or build step.
 
 
@@ -49,6 +51,8 @@ Choose the board, seed, algorithms, and greedy switch target. Click a board to f
 8. **Greedy → partial loops — combine the experiments.** Reuse the early greedy policy, then require a valid partial-loop expansion certificate before switching. It has the same experimental early phase as Greedy → certified. The comparison below measures whether the easier handoff and local loops actually help overall.
 
 Along the way, moving-body searches learned to use cells exactly when the tail vacates them. Replanning removed stale detours; equal-length route choices were scored by the exits left after eating. These changes reinforced a central discovery: **the shortest route to the current food need not produce the shortest complete game.** Body shape affects the next choices and the available food cells.
+
+<a id="evaluation-results"></a>
 
 ## 12×12 evaluation: all eight algorithms
 
