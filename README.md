@@ -1,6 +1,6 @@
 # Adil_OptimalSnakeAI
 
-**The approach is simple. First priority is the algorithms should complete the board 100% of the time. Then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. So the aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time.**
+**The aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time. The approach followed for this is simple. First priority is the algorithms should complete the board 100% of the time. So first we used Hamiltonian cycle then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. I continued this and greedy+certified hybrid(6th algorithm) was the best performing and then the later two algorithms performed worse.**
 
 A browser workbench for eight deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, and adaptive partial loops. Everything runs locally. There is no trained model, dependency installation, or build step.
 
