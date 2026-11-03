@@ -1,0 +1,10 @@
+node_modules/
+artifacts/
+.openai/
+.env
+.env.*
+*.log
+*.cpuprofile
+*.tar.gz
+.DS_Store
+Thumbs.db

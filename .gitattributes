@@ -1,0 +1,2 @@
+# Preserve exact source bytes so benchmark SHA-256 values survive cloning.
+* -text
