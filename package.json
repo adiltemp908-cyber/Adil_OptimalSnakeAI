@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Eight deterministic Snake solvers, safety certificates, and reproducible benchmarks.",
+  "description": "Nine deterministic Snake solvers, safety certificates, and reproducible benchmarks.",
   "scripts": {
     "start": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",

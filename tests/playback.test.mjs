@@ -49,7 +49,7 @@ test('a new comparison starts with an empty rewind history', () => {
   assert.ok(reset.games.every(game=>game.moves===0));
 });
 
-test('focused and later-five playback leave hidden histories and random state untouched', () => {
+test('focused and later-six playback leave hidden histories and random state untouched', () => {
   const group = new PlaybackGroup(makeGames());
   for (let i = 0; i < 3; i++) group.advance();
   const hidden = structuredClone(group.games.slice(0, 5));
@@ -63,9 +63,9 @@ test('focused and later-five playback leave hidden histories and random state un
   group.select(ALGORITHMS.slice(3));
   group.advance(); group.advance();
   assert.deepEqual(group.games.slice(0, 3), hidden.slice(0, 3));
-  assert.deepEqual(group.games.map(game => game.moves), [3, 3, 3, 5, 5, 8, 5, 5]);
+  assert.deepEqual(group.games.map(game => game.moves), [3, 3, 3, 5, 5, 8, 5, 5, 5]);
   group.select(ALGORITHMS);
-  assert.deepEqual(group.games.map(game => game.moves), [3, 3, 3, 5, 5, 8, 5, 5]);
+  assert.deepEqual(group.games.map(game => game.moves), [3, 3, 3, 5, 5, 8, 5, 5, 5]);
   assert.throws(() => group.select([]));
   assert.throws(() => group.select(['hybrid', 'hybrid']));
 });

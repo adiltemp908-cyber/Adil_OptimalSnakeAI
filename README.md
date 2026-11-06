@@ -2,9 +2,11 @@
 
 **The aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time. The approach followed for this is simple. First priority is the algorithms should complete the board 100% of the time. So first we used Hamiltonian cycle then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. I continued this and greedy+certified hybrid(6th algorithm) was the best performing and then the later two algorithms performed worse.**
 
+**A ninth algorithm, Flexible certificates, was added later. It keeps the guarantee from the very first move, with no unguaranteed greedy phase, and ties Certified routes on average moves. Greedy → certified still uses the fewest moves.**
+
 [Evaluation Results](#evaluation-results)
 
-A browser workbench for eight deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, and adaptive partial loops. Everything runs locally. There is no trained model, dependency installation, or build step.
+A browser workbench for nine deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, adaptive partial loops, and per-move flexible certificates. Everything runs locally. There is no trained model, dependency installation, or build step.
 
 
 ## Watch the algorithms
@@ -12,6 +14,8 @@ A browser workbench for eight deterministic Snake algorithms, developed step by 
 [![Eight algorithms on 12×12 at a steady 10 moves per second](docs/media/algorithms-preview.gif)](https://adiltemp908-cyber.github.io/Adil_OptimalSnakeAI/)
 
 **[Watch the full 8-minute 10-second video](https://adiltemp908-cyber.github.io/Adil_OptimalSnakeAI/)** · 12×12 · seed **60021** · **10 moves/sec** · 25% greedy switch.
+
+The video was recorded before Flexible certificates was added, so it shows the first eight algorithms.
 
 Seed 60021 was selected because all eight algorithms finish in the same order as their average-move ranking in the 100-seed comparison below. **Greedy → certified finishes first in 1,759 moves**, followed by Certified routes in 1,863. This representative single run illustrates the ranking; the batch results establish the averages.
 
@@ -49,12 +53,13 @@ Choose the board, seed, algorithms, and greedy switch target. Click a board to f
 6. **Greedy → certified — use freedom early, structure later.** While the board is open, chase food with moving-body search, post-food tail-access checks, and an exit-quality tie-breaker. Near a chosen occupancy, seek a compatible full-board cycle and switch permanently to Certified routes. We tested the handoff threshold instead of assuming that longer greedy play would be better. **25% became the practical sweet spot on the tested 12×12 settings.**
 7. **Adaptive partial loops — test the natural next idea.** A full-board cycle appeared unnecessarily restrictive, so we tried smaller loops around the body, with shorter routes and expansion when needed. An unrestricted prototype could get stuck near full occupancy. The shipped version instead keeps a checked sequence of reversible merges connecting every omitted region. This restored a completion argument, but the measured expansion costs outweighed the expected move savings.
 8. **Greedy → partial loops — combine the experiments.** Reuse the early greedy policy, then require a valid partial-loop expansion certificate before switching. It has the same experimental early phase as Greedy → certified. The comparison below measures whether the easier handoff and local loops actually help overall.
+9. **Flexible certificates — keep the guarantee on every move, from the first.** Split the board into 2×2 blocks and keep right inside each block, so every cell has two moves and the visited blocks form a tree whose outline is a full-board cycle (routing idea from twanvl/snake, MIT). Before every move, build and check that cycle for the new position. Give each food a free-move budget, then accept only moves that bring the food strictly closer, so the snake cannot circle forever. To choose between the two moves, search for the fewest moves to the current food and add the cost of 12 imagined next foods spread along the cycle. **It ties Certified routes and stays behind Greedy → certified, but unlike the hybrid it is guaranteed from the first move.**
 
 Along the way, moving-body searches learned to use cells exactly when the tail vacates them. Replanning removed stale detours; equal-length route choices were scored by the exits left after eating. These changes reinforced a central discovery: **the shortest route to the current food need not produce the shortest complete game.** Body shape affects the next choices and the available food cells.
 
 <a id="evaluation-results"></a>
 
-## 12×12 evaluation: all eight algorithms
+## 12×12 evaluation: all nine algorithms
 
 Fresh evaluation of the published engine: **100 games per algorithm, seeds 60000–60099, initial length 3, greedy target 25%, partial-loop recovery penalty 4**. Every move checks the applicable invariants. This is a new run of the current code, not a mixture of historical versions. Seeds starting at 60000 had appeared in earlier work, so this is a reproducibility/comparison batch rather than a newly reserved holdout.
 
@@ -68,6 +73,9 @@ Fresh evaluation of the published engine: **100 games per algorithm, seeds 60000
 | Greedy → certified (25%) | 100/100 | 1,776.15 | 1,766 | 1,959 | 64.87% |
 | Adaptive partial loops | 100/100 | 2,234.98 | 2,204.5 | 2,649 | 55.79% |
 | Greedy → partial loops (25%) | 100/100 | 2,214.80 | 2,197 | 2,533 | 56.19% |
+| Flexible certificates † | 100/100 | 1,811.18 | 1,814.5 | 1,970 | 64.17% |
+
+† Run separately on the same seeds and settings, also with every move checked, after Flexible certificates was added: **[flex-12x12-100.json](results/flex-12x12-100.json)**. The engine changes for Flex do not alter the other eight algorithms' decisions, so their rows stand.
 
 Raw per-game outcomes, source hash, settings, and timing: **[comparison-12x12-100.json](results/comparison-12x12-100.json)**.
 
@@ -117,9 +125,35 @@ Partial loops spent **679.73 moves per game clearing expansion bridges—about 3
 
 We tried penalizing expansion costs, preferring bridges that avoid body edges, and scoring likely next-food access. In a separate 20-seed tuning batch, rejecting locally shorter routes with worse estimated next-food cost reduced the mean from 2,380.95 to 2,234.35 moves, but did not overturn the held-out conclusion. We never read the next food or future RNG state. A weaker local constraint created more freedom, but using that freedom well required better long-term planning.
 
+### Flexible certificates: guaranteed from the first move
+
+Greedy → certified gets its lead from an early phase without a guarantee. Flexible certificates asks whether a solver can stay certified from the first move and still compete. The 2×2 block rule makes a full-board cycle cheap to build and check on every move, because the visited blocks always form a tree whose outline is that cycle.
+
+Flex was tuned on seeds 200–239 and 300–339 (40 games each), then run on the comparison seeds above:
+
+| Seeds | Flexible certificates | Certified routes | Greedy → certified |
+| --- | ---: | ---: | ---: |
+| 200–239 | 1,791 | 1,828 | 1,759 |
+| 300–339 | 1,802 | 1,799 | 1,769 |
+| 60000–60099 | 1,811.18 | 1,806.57 | 1,776.15 |
+
+Across the 180 games, Flex and Certified routes are within about 0.3% of each other, inside seed-to-seed noise. On the 100 comparison seeds, Flex uses 4.6 more moves per game than Certified routes (standard error 13.8) and 35.0 more than Greedy → certified (standard error 14.4). Food coordinates diverge between solvers, so this pairing is only approximate.
+
+Where the moves go, from a 10-game profile on seeds 200–209 (moves per food by snake length):
+
+| Snake length | 0–23 | 24–47 | 48–71 | 72–95 | 96–119 | 120+ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Flexible certificates | 10.6 | **13.3** | **15.7** | **15.4** | 14.0 | 5.7 |
+| Certified routes | 9.5 | 14.3 | 16.9 | 16.9 | 13.3 | **5.6** |
+| Greedy → certified | **8.7** | 13.5 | 16.9 | 17.2 | **12.0** | 5.8 |
+
+Flex is best in the middle of the game, where the compact block tree keeps many shortcuts certifiable. It loses early, where the keep-right rule adds about two moves per food compared with a direct route. Ten games is a small sample, so read the bands as a direction rather than exact values.
+
+The early loss is the price of the mid-game gain. We tried a free early phase followed by re-alignment to the blocks, a Certified-routes opening followed by Flex (hand-off at length 12, 24, or 36), and Flex followed by Certified routes late (hand-off at 72, 96, or 120). The openings improved the first foods but left a sprawling block tree that cost more over the next ~50 foods. The late hand-offs made no measurable difference. More look-ahead also stopped paying: 24 or 48 imagined foods, a 30,000-position search, and two foods of look-ahead were all no better than the shipped settings.
+
 ## Safety and limitations
 
-Algorithms 1–5 maintain a full-board cycle or a collision-free route to a verified terminal cycle. Under this project's rules, the associated progress measure gives a completion argument. Adaptive partial loops instead keep a verified expansion chain and have a larger bound because bridges may require waiting. The greedy phases in algorithms 6 and 8 use local checks and **do not guarantee full-game completion**.
+Algorithms 1–5 maintain a full-board cycle or a collision-free route to a verified terminal cycle. Under this project's rules, the associated progress measure gives a completion argument. Adaptive partial loops instead keep a verified expansion chain and have a larger bound because bridges may require waiting. Flexible certificates (algorithm 9) checks a full-board cycle before every move and uses a per-food progress measure, giving a completion argument with a larger bound of `(N - 3) × (2N - 1)` moves. The greedy phases in algorithms 6 and 8 use local checks and **do not guarantee full-game completion**.
 
 The rules are an obstacle-free grid, no wrapping, stationary food until eaten, and growth by one cell. Cycle construction requires at least one even dimension; the UI exposes even squares. A reported 100/100 is evidence about that sample, not proof of universal reliability. See **[algorithm invariants and bounds](docs/ALGORITHMS.md)**.
 
@@ -137,6 +171,9 @@ node scripts/benchmark.mjs 5 12 42 --verify
 # Re-run threshold screening (current engine; historical numbers may differ).
 node scripts/hybrid-sweep.mjs --count=100 --side=12 --seed=10000 --thresholds=25,35,45,55,65,75,85,95,100 --workers=4 --max-ms=0 --out=artifacts/hybrid-screen-12x12.json
 
+# Flexible certificates on the same 100 seeds, every move verified.
+node scripts/partial-study.mjs --count=100 --side=12 --seed=60000 --penalties=4 --algorithms=flex --workers=4 --out=artifacts/flex-12x12-100.json
+
 # Greedy food routing with certification handoff disabled.
 node scripts/pure-greedy-study.mjs 100 12 0 4
 
@@ -147,10 +184,12 @@ npm test
 For a shorter regression run that excludes only the expensive multi-board bulk case:
 
 ```sh
-node --test --test-skip-pattern="all eight default solvers complete regression seeds" tests/*.test.mjs
+node --test --test-skip-pattern="all nine default solvers complete regression seeds" tests/*.test.mjs
 ```
 
 The publication check passed all **43 selected tests**, covering certificates, moving-tail routing, handoffs, partial-loop expansion, deterministic decisions, rewind/replay, benchmark selection, and checkpoint writes. The long bulk regression was not rerun for publication; the fresh 800-game 12×12 comparison separately validates every move. Browser checks cover eight completed seed-42 games and the mobile layout.
+
+After Flexible certificates was added, the full suite passed all **48 tests**, including the multi-board bulk regression, which now runs Flex on every board size in it, odd sides included. In the browser, all nine seed-42 games completed.
 
 ## Repository contents
 

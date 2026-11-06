@@ -12,7 +12,7 @@ test('cycles support even-by-odd, odd-by-even, and narrow rectangles', () => {
   for (const [w, h] of [[3, 3], [1, 8], [4.5, 4], [0, 4]]) assert.throws(() => makeCycle(w, h));
 });
 
-test('all eight default solvers complete regression seeds with every-step checks', () => {
+test('all nine default solvers complete regression seeds with every-step checks', () => {
   for (const [width, height, seeds] of [[2, 2, 20], [2, 7, 20], [7, 2, 20], [4, 3, 40], [4, 4, 80], [6, 6, 60], [8, 8, 40], [12, 12, 12], [20, 20, 3]]) {
     for (let seed = 0; seed < seeds; seed++) for (const algorithm of ALGORITHMS) {
       const game = finishGame(new SnakeGame({ width, height, seed, algorithm }), true);

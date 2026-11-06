@@ -2,8 +2,8 @@ import { SnakeGame, ALGORITHMS, LABELS, summarize } from './engine.js';
 import { PlaybackGroup } from './playback.js';
 import { validSquareSide, MIN_SIDE, MAX_SIDE } from './board-size.js';
 const $ = id => document.getElementById(id);
-const COLORS = { cycle: '#a9cd7e', shortcut: '#83c9c5', repair: '#e0ba88', compact: '#bdabe1', certified: '#e99da7', hybrid: '#8ab8e6', partial: '#e3cf78', greedy_partial: '#e7a5d4' };
-const TAGS = { cycle: 'BASELINE', shortcut: 'SHORTCUTS', repair: 'ADAPTIVE', compact: 'PLANNED', certified: 'VERIFIED', hybrid: 'EXPERIMENTAL', partial: 'REVERSIBLE', greedy_partial: 'EXPERIMENTAL' };
+const COLORS = { cycle: '#a9cd7e', shortcut: '#83c9c5', repair: '#e0ba88', compact: '#bdabe1', certified: '#e99da7', hybrid: '#8ab8e6', partial: '#e3cf78', greedy_partial: '#e7a5d4', flex: '#b98ad6' };
+const TAGS = { cycle: 'BASELINE', shortcut: 'SHORTCUTS', repair: 'ADAPTIVE', compact: 'PLANNED', certified: 'VERIFIED', hybrid: 'EXPERIMENTAL', partial: 'REVERSIBLE', greedy_partial: 'EXPERIMENTAL', flex: 'GUARANTEED' };
 const number = value => Math.round(value).toLocaleString();
 let games = [], timeline, running = false, finishing = false, lastTime = 0, accumulator = 0, worker = null, rows = [], batch = null;
 let laterOnly = false, focusedAlgorithm = null;
@@ -195,6 +195,7 @@ function update() {
     $(`action-${a}`).textContent = game.lastAction;
     $(`action-${a}`).title = game.lastAction;
     $(`events-${a}`).textContent = a === 'cycle' ? 'Fixed route' : a === 'shortcut' ? `${number(game.shortcuts)} shortcuts` : a === 'certified' ? `${number(game.certifiedRoutes)} routes` : `${number(game.repairs)} repairs`;
+    if (a === 'flex') { $(`events-${a}`).textContent = `${number(game.repairs)} new cycles`; $(`events-${a}`).title = 'Each new cycle is a full-board certificate, checked before the move is taken.'; }
     if (a === 'certified') $(`events-${a}`).title = `${game.certifiedReplans} certified route revisions during play`;
     if (a === 'partial' || (a === 'greedy_partial' && game.hybridPhase === 'partial')) {
       const loop = game.activePlan?.loop ?? game.partialLoop;
@@ -226,7 +227,7 @@ function update() {
     $('insight-text').textContent = `${LABELS[best.algorithm]} finished in ${number(best.moves)} moves.${hasBaseline ? ` The fixed cycle used ${number(games[0].moves)}.` : ''} One seed is a snapshot; run a batch to compare average performance.`;
   } else {
     $('insight-title').textContent = failed ? 'An incomplete run counts too.' : 'Smaller loops. Checked expansions.';
-    $('insight-text').textContent = failed ? 'A solver can fail or reach its move budget before filling the board. Compare completion rates alongside move counts.' : 'Compare eight solvers from the same three-cell start. The hybrid uses local safety checks early, then switches once a compatible cycle is verified. Its early phase has no completion guarantee. Adaptive partial loops retain checked connections to every omitted region.';
+    $('insight-text').textContent = failed ? 'A solver can fail or reach its move budget before filling the board. Compare completion rates alongside move counts.' : 'Compare nine solvers from the same three-cell start. The hybrid uses local safety checks early, then switches once a compatible cycle is verified. Its early phase has no completion guarantee. Adaptive partial loops retain checked connections to every omitted region. Flexible certificates check a full-board cycle before every move.';
   }
   drawChart();
 }
