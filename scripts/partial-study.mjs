@@ -20,7 +20,7 @@ if (!isMainThread) {
   const jobs = [], rows = [], pool = [];
   for (let i = 0; i < count; i++) for (const algorithm of algorithms) for (const penalty of ['partial', 'greedy_partial'].includes(algorithm) ? penalties : [1]) jobs.push({ side, seed: (seedStart + i) >>> 0, algorithm, penalty });
   const source = createHash('sha256');
-  for (const name of ['engine.js', 'partial.js', 'hybrid.js', 'routing.js', 'certified.js', 'flex.js']) source.update(readFileSync(new URL(`../dist/${name}`, import.meta.url)));
+  for (const name of ['engine.js', 'partial.js', 'hybrid.js', 'routing.js', 'certified.js', 'lanekeeper.js']) source.update(readFileSync(new URL(`../dist/${name}`, import.meta.url)));
   const sourceHash = source.digest('hex'), out = options.out ?? `artifacts/partial-${side}x${side}-${count}-seed${seedStart}.json`;
   mkdirSync(dirname(out), { recursive: true });
   const summary = () => [...new Set(rows.map(r => `${r.algorithm}/${r.penalty}`))].sort().map(key => {

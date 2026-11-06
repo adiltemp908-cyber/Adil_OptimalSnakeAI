@@ -34,17 +34,17 @@ Restore parents until the food is on the live loop. Then successor moves and acc
 
 Every detached grid cycle contains at least four cells. A loose per-food bound is `floor(N / 4) × (N - 1)`; multiply by `N - 3` for the whole game. The larger bound reflects real waiting costs, not improved efficiency. In the recorded held-out 12×12 experiment, no partial-loop game needed the extra allowance: all completed within 2,862 moves, below the smaller 20,163-move budget as well.
 
-## Flexible certificates
+## Lanekeeper
 
 On boards with two even sides, the grid is split into 2×2 blocks. Inside each block the snake always turns the same way (keep right), so every cell has exactly two legal moves: stay in the block or cross into the next one. The blocks the body has passed through form a tree, and the outline of a spanning tree of blocks is a Hamiltonian cycle. This makes a certificate cheap to build. The keep-right routing inside 2×2 blocks comes from twanvl/snake (MIT licence).
 
-Before every move, the solver builds a Hamiltonian cycle for the body after that move and checks it cell by cell (`certifies` in `dist/flex.js`). The cycle must start at the head, continue through every free cell, and end with the body in reverse order. This is the compact invariant used by Certified routes. If no move toward food gets a valid cycle, the snake takes the successor on its current cycle, which keeps the invariant. A certified state therefore always has a safe continuation, and following its cycle fills the board.
+Before every move, the solver builds a Hamiltonian cycle for the body after that move and checks it cell by cell (`certifies` in `dist/lanekeeper.js`). The cycle must start at the head, continue through every free cell, and end with the body in reverse order. This is the compact invariant used by Certified routes. If no move toward food gets a valid cycle, the snake takes the successor on its current cycle, which keeps the invariant. A certified state therefore always has a safe continuation, and following its cycle fills the board.
 
-Each food starts with a budget of `N` free moves. While budget remains, any certified move is allowed and the progress measure is `N` plus the remaining budget. After that, a move is accepted only if the food is strictly closer along the new cycle, and the progress measure is that forward distance, below `N`. The measure falls on every move, so one food costs at most `N + (N - 1) = 2N - 1` moves and the whole game at most `(N - 3) × (2N - 1)`. For 12×12 this is 40,467 moves; the engine uses it as Flex's move budget. In the recorded 12×12 run, the 95th percentile was 1,970 moves.
+Each food starts with a budget of `N` free moves. While budget remains, any certified move is allowed and the progress measure is `N` plus the remaining budget. After that, a move is accepted only if the food is strictly closer along the new cycle, and the progress measure is that forward distance, below `N`. The measure falls on every move, so one food costs at most `N + (N - 1) = 2N - 1` moves and the whole game at most `(N - 3) × (2N - 1)`. For 12×12 this is 40,467 moves; the engine uses it as Lanekeeper's move budget. In the recorded 12×12 run, the 95th percentile was 1,970 moves.
 
 To choose between the two allowed moves, the solver works on copies of the game. For each move it searches up to 3,000 positions for the fewest moves to the current food, then adds the cost of 12 imagined next foods spread evenly over the free cells along the cycle. Every compared move uses the same imagined foods. They come from a separate seeded generator and never draw from the food PRNG.
 
-Boards with an odd side have no 2×2 blocks. There, Flex searches for a general cycle (up to 2,000 nodes), plans food routes strictly shorter than the cycle distance, and commits to a route only when the body at the food has a verified cycle. The committed route is checked like a Certified route.
+Boards with an odd side have no 2×2 blocks. There, Lanekeeper searches for a general cycle (up to 2,000 nodes), plans food routes strictly shorter than the cycle distance, and commits to a route only when the body at the food has a verified cycle. The committed route is checked like a Certified route.
 
 There is no unguaranteed phase: the certificate holds from the first move.
 

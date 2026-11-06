@@ -1,4 +1,4 @@
-// Flex: cell-tree routing with a certificate checked before every move.
+// Lanekeeper: cell-tree routing with a certificate checked before every move.
 //
 // Safety rule: before each move we build a Hamiltonian cycle on which the
 // moved body is one unbroken stretch (head first, free cells ahead, tail last)
@@ -15,8 +15,8 @@
 // Progress: each apple gets `freeBudget` unrestricted moves; after that a move
 // is taken only if it brings the food strictly closer along the new cycle.
 
-const neighborsOf = game => game.flexNeighbors ??= Array.from({ length: game.size }, (_, c) => game.neighbors(c));
-export const flexSettings = { freeBudget: null, generalNodes: 2000, parentCost: 1, sameCost: 1.499, newCost: 3.4, samples: 12, horizon: 1, stratified: 1, searchNodes: 3000 };
+const neighborsOf = game => game.laneNeighbors ??= Array.from({ length: game.size }, (_, c) => game.neighbors(c));
+export const lanekeeperSettings = { freeBudget: null, generalNodes: 2000, parentCost: 1, sameCost: 1.499, newCost: 3.4, samples: 12, horizon: 1, stratified: 1, searchNodes: 3000 };
 const blockMode = game => game.width % 2 === 0 && game.height % 2 === 0;
 
 export function positionsOf(cycle) {
@@ -46,7 +46,7 @@ export function certifies(game, cycle, body) {
 // "outside" crosses to the neighbouring block (or -1 at the board edge).
 // Block directions: 0 left, 1 right, 2 up, 3 down (opposite = d ^ 1).
 function blockMoves(game) {
-  return game.flexBlocks ??= (() => {
+  return game.laneBlocks ??= (() => {
     const { width: w, height: h, size } = game, bw = w >> 1, bh = h >> 1, blocks = bw * bh;
     const inside = new Int32Array(size), outside = new Int32Array(size), block = new Int32Array(size), outDir = new Int8Array(size).fill(-1);
     for (let c = 0; c < size; c++) {
@@ -172,7 +172,7 @@ function generalCycle(game, body, maxNodes) {
 
 export function certificateFor(game, body) {
   // Imagined futures skip the slow general search on block boards; real moves never do.
-  return blockCycle(game, body) ?? (game.flexSim && blockMode(game) ? null : generalCycle(game, body, flexSettings.generalNodes));
+  return blockCycle(game, body) ?? (game.laneSim && blockMode(game) ? null : generalCycle(game, body, lanekeeperSettings.generalNodes));
 }
 
 // Shortest route to food that drives on the right in every block and only
@@ -195,7 +195,7 @@ function routeTo(game, isTarget) {
   // Dijkstra. Block moves are weighted (twanvl's "cell-variant"): returning to
   // the parent block is cheapest and opening a new block dearest, which keeps
   // the block tree compact.
-  const { parentCost, sameCost, newCost } = flexSettings;
+  const { parentCost, sameCost, newCost } = lanekeeperSettings;
   const from = new Int32Array(size).fill(-1), cost = new Float64Array(size).fill(Infinity), done = new Uint8Array(size);
   // Binary heap of (cost, cell) in typed arrays; each cell is pushed at most
   // once per incoming edge, so 4 * size entries always suffice.
@@ -303,14 +303,14 @@ function openMove(game) {
   for (const route of openRoutes(game, distance - 1)) {
     const terminal = simulateRoute(game, route);
     if (!terminal) continue;
-    const cycle = terminal.length === size ? null : generalCycle(game, terminal, flexSettings.generalNodes);
+    const cycle = terminal.length === size ? null : generalCycle(game, terminal, lanekeeperSettings.generalNodes);
     if (terminal.length === size || cycle) {
       game.activePlan = { path: route, cycle, cursor: 0, food };
       game.certifiedRoutes++;
       return route[0];
     }
   }
-  if (game.flexBudget > 0) game.flexBudget--;
+  if (game.laneBudget > 0) game.laneBudget--;
   return game.cycle[(game.positions[body[0]] + 1) % size];
 }
 
@@ -320,14 +320,14 @@ function moved(game, next) {
 
 // Strictly decreasing while one apple is pending: free moves count down from
 // size + budget; after that, distance to food along the certified cycle.
-export function flexProgress(game) {
+export function lanekeeperProgress(game) {
   if (game.activePlan) return game.activePlan.path.length - game.activePlan.cursor;
-  const budget = game.flexFood === game.food ? game.flexBudget : (flexSettings.freeBudget ?? game.size);
+  const budget = game.laneFood === game.food ? game.laneBudget : (lanekeeperSettings.freeBudget ?? game.size);
   return budget > 0 ? game.size + budget : (game.positions[game.food] - game.positions[game.body[0]] + game.size) % game.size;
 }
 
 function startApple(game) {
-  if (game.flexFood !== game.food) { game.flexFood = game.food; game.flexBudget = flexSettings.freeBudget ?? game.size; }
+  if (game.laneFood !== game.food) { game.laneFood = game.food; game.laneBudget = lanekeeperSettings.freeBudget ?? game.size; }
 }
 
 // Every move the safety rule allows now: legal, certified, and (once the free
@@ -346,13 +346,13 @@ function safeMoves(game) {
     const after = moved(game, m);
     if (after.length === size) { moves.push({ move: m, cycle: null }); continue; }
     const cycle = certificateFor(game, after);
-    if (cycle && (game.flexBudget > 0 || m === food || cycle.indexOf(food) < distance)) moves.push({ move: m, cycle });
+    if (cycle && (game.laneBudget > 0 || m === food || cycle.indexOf(food) < distance)) moves.push({ move: m, cycle });
   }
   return moves;
 }
 
 function apply(game, choice) {
-  if (game.flexBudget > 0) game.flexBudget--;
+  if (game.laneBudget > 0) game.laneBudget--;
   if (choice.cycle) { game.cycle = choice.cycle; game.positions = positionsOf(choice.cycle); game.repairs++; }
   return choice.move;
 }
@@ -369,13 +369,13 @@ function rng(seed) {
 }
 
 // Play the base policy forward from `choice`: finish the current apple, then
-// `flexSettings.horizon` imagined apples. Returns the number of moves used.
+// `lanekeeperSettings.horizon` imagined apples. Returns the number of moves used.
 function simulateFrom(game) {
   return {
     width: game.width, height: game.height, size: game.size, food: game.food,
     body: [...game.body], occupied: Uint8Array.from(game.occupied), cycle: game.cycle, positions: game.positions,
-    flexNeighbors: neighborsOf(game), flexBlocks: game.flexBlocks, flexFood: game.flexFood, flexBudget: game.flexBudget, repairs: 0,
-    neighbors: c => game.neighbors(c), flexSim: true,
+    laneNeighbors: neighborsOf(game), laneBlocks: game.laneBlocks, laneFood: game.laneFood, laneBudget: game.laneBudget, repairs: 0,
+    neighbors: c => game.neighbors(c), laneSim: true,
   };
 }
 
@@ -440,21 +440,21 @@ function finishSearch(sim, maxNodes) {
   return { steps: best, sim: bestSim };
 }
 
-export function chooseFlexMove(game) {
+export function chooseLanekeeperMove(game) {
   if (game.food === null) return null;
   startApple(game);
   if (game.activePlan) return game.activePlan.path[game.activePlan.cursor];
   if (inOpenPhase(game)) return openMove(game);
-  if (!flexSettings.samples) return baseMove(game);
+  if (!lanekeeperSettings.samples) return baseMove(game);
   const choices = safeMoves(game);
   if (choices.length < 2) return choices.length ? apply(game, choices[0]) : baseMove(game);
   // Score = moves to finish this apple, plus moves for `horizon` imagined
   // apples, summed over `samples` imagined futures shared by every choice.
-  const { samples, horizon } = flexSettings, limit = 4 * game.size;
+  const { samples, horizon } = lanekeeperSettings, limit = 4 * game.size;
   // Stratified imagined apples: free cells in order along the current cycle,
   // one per equal slice (random offset), shared by every compared move.
   let order = null, offset = 0;
-  if (flexSettings.stratified) {
+  if (lanekeeperSettings.stratified) {
     order = [];
     for (let i = 1, h = game.positions[game.body[0]]; i < game.size; i++) { const c = game.cycle[(h + i) % game.size]; if (!game.occupied[c] && c !== game.food) order.push(c); }
     offset = rng(game.seed * 7919 + game.moves * 31)();
@@ -462,11 +462,11 @@ export function chooseFlexMove(game) {
   let best = null, bestCost = Infinity;
   for (const choice of choices) {
     let sim = simulateFrom(game), cost;
-    if (flexSettings.searchNodes) {
+    if (lanekeeperSettings.searchNodes) {
       // Fewest moves to the current apple over every certified choice, not just the base policy's.
       const first = apply(sim, choice);
       if (stepSim(sim, first)) cost = samples;
-      else { const found = finishSearch(sim, flexSettings.searchNodes); cost = samples * (1 + found.steps); sim = found.sim; }
+      else { const found = finishSearch(sim, lanekeeperSettings.searchNodes); cost = samples * (1 + found.steps); sim = found.sim; }
     } else cost = samples * play(sim, apply(sim, choice), 1, null, limit);
     const done = sim.body.length === sim.size;
     // Stop once this move can no longer beat the best one (same decision, less work).
@@ -507,12 +507,12 @@ function baseMove(game) {
     const after = moved(game, route[0]);
     const cycle = after.length === size ? null : certificateFor(game, after);
     const closer = route[0] === food || (cycle && cycle.indexOf(food) < distance);
-    if (after.length === size || (cycle && (game.flexBudget > 0 || closer))) {
-      if (game.flexBudget > 0) game.flexBudget--;
+    if (after.length === size || (cycle && (game.laneBudget > 0 || closer))) {
+      if (game.laneBudget > 0) game.laneBudget--;
       if (cycle) { game.cycle = cycle; game.positions = positionsOf(cycle); game.repairs++; }
       return route[0];
     }
   }
-  if (game.flexBudget > 0) game.flexBudget--;
+  if (game.laneBudget > 0) game.laneBudget--;
   return successor;
 }

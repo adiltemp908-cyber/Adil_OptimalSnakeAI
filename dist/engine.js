@@ -2,9 +2,9 @@
 import { findCertifiedRoute, validatePlan } from './certified.js';
 import { chooseHybridMove, validateHybridPlan, inspectSpace } from './hybrid.js';
 import { choosePartialMove, validatePartialState, validatePartialPlan } from './partial.js';
-import { chooseFlexMove, flexProgress } from './flex.js';
-export const ALGORITHMS = ['cycle', 'shortcut', 'repair', 'compact', 'certified', 'hybrid', 'partial', 'greedy_partial', 'flex'];
-export const LABELS = { cycle: 'Hamiltonian cycle', shortcut: 'Safe shortcuts', repair: 'Dynamic repair', compact: 'Compact planner', certified: 'Certified routes', hybrid: 'Greedy → certified', partial: 'Adaptive partial loops', greedy_partial: 'Greedy → partial loops', flex: 'Flexible certificates' };
+import { chooseLanekeeperMove, lanekeeperProgress } from './lanekeeper.js';
+export const ALGORITHMS = ['cycle', 'shortcut', 'repair', 'compact', 'certified', 'hybrid', 'partial', 'greedy_partial', 'lanekeeper'];
+export const LABELS = { cycle: 'Hamiltonian cycle', shortcut: 'Safe shortcuts', repair: 'Dynamic repair', compact: 'Compact planner', certified: 'Certified routes', hybrid: 'Greedy → certified', partial: 'Adaptive partial loops', greedy_partial: 'Greedy → partial loops', lanekeeper: 'Lanekeeper' };
 export const mod = (n, m) => ((n % m) + m) % m;
 
 export function seededRandom(seed) {
@@ -282,8 +282,8 @@ export class SnakeGame {
     this.partialLoop = this.cycle; this.partialParents = [];
     this.partialRoutes = 0; this.partialReplans = 0;
     this.partialSplits = 0; this.partialMerges = 0; this.partialRecoveryMoves = 0;
-    // Flex: each food allows `size` free moves, then at most size - 1 moves that strictly close the cycle distance.
-    this.moveLimit = algorithm === 'flex' ? (this.size - 3) * (2 * this.size - 1) : (this.size - 3) * (this.size - 1) * (['partial', 'greedy_partial'].includes(algorithm) ? Math.floor(this.size / 4) : 1);
+    // Lanekeeper: each food allows `size` free moves, then at most size - 1 moves that strictly close the cycle distance.
+    this.moveLimit = algorithm === 'lanekeeper' ? (this.size - 3) * (2 * this.size - 1) : (this.size - 3) * (this.size - 1) * (['partial', 'greedy_partial'].includes(algorithm) ? Math.floor(this.size / 4) : 1);
     this.status = 'running';
     this.lastAction = this.greedyEarly ? 'Seeking a locally checked food route' : 'Following the cycle';
     this.history = [[0, 3]];
@@ -297,7 +297,7 @@ export class SnakeGame {
 
   progressMeasure() {
     if (this.food === null) return 0;
-    if (this.algorithm === 'flex') return flexProgress(this);
+    if (this.algorithm === 'lanekeeper') return lanekeeperProgress(this);
     return this.activePlan ? this.activePlan.path.length - this.activePlan.cursor : this.distance(this.body[0], this.food);
   }
 
@@ -323,7 +323,7 @@ export class SnakeGame {
   }
 
   chooseMove() {
-    if (this.algorithm === 'flex') return chooseFlexMove(this);
+    if (this.algorithm === 'lanekeeper') return chooseLanekeeperMove(this);
     if (this.usesPartial) return choosePartialMove(this);
     if (this.greedyEarly) return chooseHybridMove(this);
     if (this.algorithm === 'certified' || this.algorithm === 'hybrid') {
@@ -471,7 +471,7 @@ export class SnakeGame {
     }
     if (new Set(this.body).size !== this.body.length) throw new Error('Self collision.');
     const hybridEarly = this.greedyEarly;
-    const certifiedWin = (this.algorithm === 'certified' || this.algorithm === 'hybrid' || this.algorithm === 'flex') && this.status === 'won';
+    const certifiedWin = (this.algorithm === 'certified' || this.algorithm === 'hybrid' || this.algorithm === 'lanekeeper') && this.status === 'won';
     if (this.usesPartial) {
       if (this.activePlan ? !validatePartialPlan(this, this.activePlan) : this.status !== 'won' && !validatePartialState(this)) throw new Error('Invalid partial loop or expansion certificate.');
     } else if (this.activePlan) {
@@ -480,7 +480,7 @@ export class SnakeGame {
       if (!inspectSpace(this, this.body).safe) throw new Error('Hybrid lost its checked tail access.');
     } else if (!certifiedWin && !hybridEarly) {
       if (!bodyOrdered(this.body, this.positions, this.size)) throw new Error('Body order violated.');
-      if ((this.algorithm === 'compact' || this.algorithm === 'certified' || this.algorithm === 'hybrid' || this.algorithm === 'flex') && this.distance(this.body[0], this.body.at(-1)) !== this.size - this.body.length + 1) throw new Error('Compact body invariant violated.');
+      if ((this.algorithm === 'compact' || this.algorithm === 'certified' || this.algorithm === 'hybrid' || this.algorithm === 'lanekeeper') && this.distance(this.body[0], this.body.at(-1)) !== this.size - this.body.length + 1) throw new Error('Compact body invariant violated.');
     }
     for (let i = 1; i < this.body.length; i++) if (!adjacent(this.body[i - 1], this.body[i], this.width)) throw new Error('Disconnected body.');
     const occupied = new Set(this.body);
