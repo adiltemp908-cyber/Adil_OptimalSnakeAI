@@ -79,17 +79,18 @@ Move averages, medians, and p95 include completed games only; always read the co
 
 ## Evaluation of the best model
 
-Greedy → certified was evaluated on **100 games per grid size**, using seeds **200000–200099**, an initial length of **3**, and the **25% switch target**. All **500 games completed successfully**, with no failures or timeouts.
+Greedy → certified was evaluated on **100 games per grid size**, with an initial length of **3** and the **25% switch target**. The 12×12 row uses the existing evaluation on seeds **60000–60099**; the other grid sizes use seeds **200000–200099**. All **600 games completed successfully**, with no failures or timeouts.
 
 | Grid size | Completed | Mean moves | Median | p95 |
 | --- | ---: | ---: | ---: | ---: |
 | 6×6 | 100/100 | 167.86 | 167 | 197 |
 | 10×10 | 100/100 | 944.16 | 942.5 | 1,057 |
+| 12×12 | 100/100 | 1,776.15 | 1,766 | 1,959 |
 | 16×16 | 100/100 | 4,762.36 | 4,763 | 5,287 |
 | 20×20 | 100/100 | 10,532.46 | 10,520 | 11,385 |
 | 30×30 | 100/100 | 44,695.25 | 44,542 | 47,717 |
 
-These runs checked collisions and certified progress every move, with full invariant checks initially, after each food, every 100 moves, and at completion. The final audit verified seed coverage, the solver source hash, and all summary statistics. The existing 12×12 result is reported in the comparison above.
+The 12×12 runs checked the applicable invariants every move; their raw results are in [comparison-12x12-100.json](results/comparison-12x12-100.json). The other five grid sizes checked collisions and certified progress every move, with full invariant checks initially, after each food, every 100 moves, and at completion. Their final audit verified seed coverage, the solver source hash, and all summary statistics.
 
 ### Why 25% was the sweet spot for greedy → certified
 
