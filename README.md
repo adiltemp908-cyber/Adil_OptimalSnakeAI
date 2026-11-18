@@ -3,6 +3,9 @@
 **The aim is trying to develop a algorithm with the least average moves that can complete the board 100% of the time. The approach followed for this is simple. First priority is the algorithms should complete the board 100% of the time. So first we used Hamiltonian cycle then the next algorithm should retain the garanteed completion while the tweaks made is aimed to reduce average moves. I continued this and greedy+certified hybrid(6th algorithm) was the best performing and then the later two algorithms performed worse.**
 
 [Evaluation Results](#evaluation-results)
+
+[Evaluation of the best model](#evaluation-of-the-best-model)
+
 Note: The Greedy+Certified algorithm that is developed here is performs even better than the best published algorithm I could find in research papers or online
 
 A browser workbench for eight deterministic Snake algorithms, developed step by step from a fixed Hamiltonian cycle to certified food routes, greedy hybrids, and adaptive partial loops. Everything runs locally. There is no trained model, dependency installation, or build step.
@@ -73,6 +76,20 @@ Fresh evaluation of the published engine: **100 games per algorithm, seeds 60000
 Raw per-game outcomes, source hash, settings, and timing: **[comparison-12x12-100.json](results/comparison-12x12-100.json)**.
 
 Move averages, medians, and p95 include completed games only; always read the completion column first. Reduction is relative to the Hamiltonian-cycle mean, not a known optimum. Same seed supplies the same random ranks among each solver's free cells, so food coordinates may diverge. Timing includes planning and verification under concurrent CPU load and is not a controlled speed benchmark.
+
+## Evaluation of the best model
+
+Greedy → certified was evaluated on **100 games per grid size**, using seeds **200000–200099**, an initial length of **3**, and the **25% switch target**. All **500 games completed successfully**, with no failures or timeouts.
+
+| Grid size | Completed | Mean moves | Median | p95 |
+| --- | ---: | ---: | ---: | ---: |
+| 6×6 | 100/100 | 167.86 | 167 | 197 |
+| 10×10 | 100/100 | 944.16 | 942.5 | 1,057 |
+| 16×16 | 100/100 | 4,762.36 | 4,763 | 5,287 |
+| 20×20 | 100/100 | 10,532.46 | 10,520 | 11,385 |
+| 30×30 | 100/100 | 44,695.25 | 44,542 | 47,717 |
+
+These runs checked collisions and certified progress every move, with full invariant checks initially, after each food, every 100 moves, and at completion. The final audit verified seed coverage, the solver source hash, and all summary statistics. The existing 12×12 result is reported in the comparison above.
 
 ### Why 25% was the sweet spot for greedy → certified
 
